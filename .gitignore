@@ -1,0 +1,12 @@
+.idea/
+__pycache__/
+*.train
+*.valid
+*.test
+_version.py
+*.egg-info/
+*.csv
+
+# Other
+data/train
+data/test

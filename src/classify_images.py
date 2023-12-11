@@ -1,108 +1,18 @@
-from PIL import Image
-import matplotlib.pyplot as plt
-from torch.utils.data import Dataset, DataLoader
-import torchvision.transforms as transforms
-import torch.nn.functional as F
-import torch
+from torch.utils.data import DataLoader
 import torch.nn as nn
-import numpy as np
 import torch.optim as optim
-import os
 from typing import List
+from load_dataset import ImageDataset, Transform, TransformToRGB
+import torch
+from net import *
 
 
-class ImageDataset(Dataset):
-    def __init__(self, dataset_path, images_dirs, transform=None):
-        self.transform = transform
-        self.images_paths = []
-        for i, dir_name in enumerate(images_dirs):
-            dir_path = os.path.join(dataset_path, dir_name)
-            for img_name in os.listdir(dir_path):
-                self.images_paths.append((os.path.join(dir_path, img_name), i))
-
-    def __len__(self):
-        return len(self.images_paths)
-
-    def __getitem__(self, idx):
-        sample = (Image.open(self.images_paths[idx][0]), self.images_paths[idx][1])
-        if self.transform:
-            sample = self.transform(sample)
-
-        return sample
-
-
-class Transform(object):
-    def __call__(self, sample):
-        image = sample[0]
-        label = sample[1]
-
-        transform = transforms.Compose(
-            [
-                transforms.ToTensor(),
-                # transforms.Resize(size=(64, 64), antialias=True),
-                transforms.Normalize((0.5), (0.5)),
-            ]
-        )
-
-        return (transform(image), label)
-
-
-def imshow(img):
-    img = img / 2 + 0.5  # unnormalize
-    npimg = img.numpy()
-    plt.imshow(np.transpose(npimg, (1, 2, 0)))
-    plt.show()
-
-
-class Net(nn.Module):
-    def __init__(self):
-        # initialize the network
-        super(Net, self).__init__()
-        # 3 input image channel, 6 output channels,
-        # 5x5 square convolution kernel
-        #     self.conv1 = nn.Conv2d(1, 6, 5)
-        # # Max pooling over a (2, 2) window
-        #     self.pool = nn.MaxPool2d(2, 2)
-        #     self.conv2 = nn.Conv2d(6, 16, 5)
-        #     self.conv3 = nn.Conv2d(16, 16, 5)
-        #     self.fc1 = nn.Linear(16 * 2 * 2, 120) # 5x5 from image dimension
-        #     self.fc2 = nn.Linear(120, 84)
-        #     self.fc3 = nn.Linear(84, 6)
-
-        self.conv1 = nn.Conv2d(1, 32, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
-        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
-        # Max-pooling layers
-        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        # Fully connected layers
-        self.fc1 = nn.Linear(128 * 6 * 6, 256)
-        self.fc2 = nn.Linear(256, 6)
-
-    def forward(self, x):
-        # the forward propagation algorithm
-        # x = self.pool(F.relu(self.conv1(x)))
-        # x = self.pool(F.relu(self.conv2(x)))
-        # x = self.pool(F.relu(self.conv3(x)))
-        # x = x.view(-1, 16 * 2 * 2)
-        # x = F.relu(self.fc1(x))
-        # x = F.relu(self.fc2(x))
-        # x = self.fc3(x)
-
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = self.pool(F.relu(self.conv3(x)))
-        x = x.view(-1, 128 * 6 * 6)  # Flatten the feature map
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-        return x
-
-
-def train(classes: List[str], net_path: str, batch_size: int):
-    trainset = ImageDataset("data/train", classes, transform=Transform())
-    trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=7)
+def train(classes: List[str], net_path: str, batch_size: int, network):
+    image_dataset = ImageDataset("data/train", classes, transform=Transform())
+    data_loader = DataLoader(image_dataset, batch_size=batch_size, shuffle=True, num_workers=7)
 
     # get some random training images
-    dataiter = iter(trainloader)
+    dataiter = iter(data_loader)
     images, labels = next(dataiter)
 
     # show images
@@ -110,16 +20,19 @@ def train(classes: List[str], net_path: str, batch_size: int):
     # print labels
     print(" ".join(f"{classes[labels[j]]:5s}" for j in range(batch_size)))
 
-    net = Net()
+    net = network()
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
     for epoch in range(10):  # loop over the dataset multiple times
         running_loss = 0.0
-        for i, data in enumerate(trainloader, 0):
+        for i, data in enumerate(data_loader, 0):
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
+
+            # flatten labels
+            labels = torch.flatten(labels)
 
             # zero the parameter gradients
             optimizer.zero_grad()
@@ -141,18 +54,162 @@ def train(classes: List[str], net_path: str, batch_size: int):
     torch.save(net.state_dict(), net_path)
 
 
-def test(classes: List[str], net_path: str, batch_size: int):
-    testset = ImageDataset("data/test", classes, transform=Transform())
-    testloader = DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=7)
+def train_adam(classes: List[str], net_path: str, batch_size: int, network):
+    image_dataset = ImageDataset("data/train", classes, transform=Transform())
+    data_loader = DataLoader(image_dataset, batch_size=batch_size, shuffle=True, num_workers=7)
 
-    dataiter = iter(testloader)
+    # get some random training images
+    dataiter = iter(data_loader)
+    images, labels = next(dataiter)
+
+    # show images
+    # imshow(torchvision.utils.make_grid(images))
+    # print labels
+    print(" ".join(f"{classes[labels[j]]:5s}" for j in range(batch_size)))
+
+    net = network()
+
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(net.parameters(), lr=0.001)
+
+    for epoch in range(10):  # loop over the dataset multiple times
+        running_loss = 0.0
+        for i, data in enumerate(data_loader, 0):
+            # get the inputs; data is a list of [inputs, labels]
+            inputs, labels = data
+
+            # flatten labels
+            labels = torch.flatten(labels)
+
+            # zero the parameter gradients
+            optimizer.zero_grad()
+
+            # forward + backward + optimize
+            outputs = net(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+
+            # print statistics
+            running_loss += loss.item()
+            if i % 100 == 99:  # print every 100 mini-batches
+                print(f"[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.3f}")
+                running_loss = 0.0
+
+    print("Finished Training")
+
+    torch.save(net.state_dict(), net_path)
+
+
+def train_v2(classes: List[str], net_path: str, batch_size: int, network):
+    image_dataset = ImageDataset("data/train", classes, transform=Transform())
+    data_loader = DataLoader(image_dataset, batch_size=batch_size, shuffle=True, num_workers=7)
+
+    # get some random training images
+    dataiter = iter(data_loader)
+    images, labels = next(dataiter)
+
+    # show images
+    # imshow(torchvision.utils.make_grid(images))
+    # print labels
+    print(" ".join(f"{classes[labels[j]]:5s}" for j in range(batch_size)))
+
+    net = network()
+
+    criterion = nn.KLDivLoss()
+
+    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+
+    for epoch in range(10):
+        running_loss = 0.0
+        for i, data in enumerate(data_loader, 0):
+            inputs, labels = data
+            optimizer.zero_grad()
+            outputs = F.log_softmax(net(inputs), dim=1)  # Apply log_softmax to model outputs
+            labels_onehot = F.one_hot(labels, num_classes=len(classes)).float()  # Convert labels to one-hot encoding
+            loss = criterion(outputs, labels_onehot)
+            loss.backward()
+            optimizer.step()
+
+            running_loss += loss.item()
+            if i % 100 == 99:
+                print(f"[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.3f}")
+                running_loss = 0.0
+
+    print("Finished Training")
+    torch.save(net.state_dict(), net_path)
+
+
+def train_v3(classes: List[str], net_path: str, batch_size: int, network):
+    image_dataset = ImageDataset("data/train", classes, transform=TransformToRGB())
+    data_loader = DataLoader(image_dataset, batch_size=batch_size, shuffle=True, num_workers=7)
+
+    net = network(num_classes=len(classes))
+
+    # Use Focal Loss
+    criterion = FocalLoss(gamma=2)
+
+    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+
+    for epoch in range(10):
+        running_loss = 0.0
+        for i, data in enumerate(data_loader, 0):
+            inputs, labels = data
+            optimizer.zero_grad()
+            outputs = net(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+
+            running_loss += loss.item()
+            if i % 100 == 99:
+                print(f"[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.3f}")
+                running_loss = 0.0
+
+    print("Finished Training")
+    torch.save(net.state_dict(), net_path)
+
+
+def train_v4(classes: List[str], net_path: str, batch_size: int, network):
+    image_dataset = ImageDataset("data/train", classes, transform=TransformToRGB())
+    data_loader = DataLoader(image_dataset, batch_size=batch_size, shuffle=True, num_workers=10)
+
+    net = network(num_classes=len(classes))
+
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+
+    for epoch in range(10):
+        running_loss = 0.0
+        for i, data in enumerate(data_loader, 0):
+            inputs, labels = data
+            optimizer.zero_grad()
+            outputs = net(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+
+            running_loss += loss.item()
+            if i % 100 == 99:
+                print(f"[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.3f}")
+                running_loss = 0.0
+
+    print("Finished Training")
+    torch.save(net.state_dict(), net_path)
+
+
+def test(classes: List[str], net_path: str, batch_size: int, network):
+    image_dataset = ImageDataset("data/test", classes, transform=Transform())
+    data_loader = DataLoader(image_dataset, batch_size=batch_size, shuffle=False, num_workers=7)
+
+    dataiter = iter(data_loader)
     images, labels = next(dataiter)
 
     # print images
     # imshow(torchvision.utils.make_grid(images))
     print("GroundTruth: ", " ".join(f"{classes[labels[j]]:5s}" for j in range(4)))
 
-    net = Net()
+    net = network()
     net.load_state_dict(torch.load(net_path))
     outputs = net(images)
 
@@ -164,7 +221,7 @@ def test(classes: List[str], net_path: str, batch_size: int):
     total = 0
     # since we're not training, we don't need to calculate the gradients for our outputs
     with torch.no_grad():
-        for data in testloader:
+        for data in data_loader:
             images, labels = data
             # calculate outputs by running images through the network
             outputs = net(images)
@@ -181,7 +238,63 @@ def test(classes: List[str], net_path: str, batch_size: int):
 
     # again no gradients needed
     with torch.no_grad():
-        for data in testloader:
+        for data in data_loader:
+            images, labels = data
+            outputs = net(images)
+            _, predictions = torch.max(outputs, 1)
+            # collect the correct predictions for each class
+            for label, prediction in zip(labels, predictions):
+                if label == prediction:
+                    correct_pred[classes[label]] += 1
+                total_pred[classes[label]] += 1
+
+    # print accuracy for each class
+    for classname, correct_count in correct_pred.items():
+        accuracy = 100 * float(correct_count) / total_pred[classname]
+        print(f"Accuracy for class: {classname:5s} is {accuracy:.1f} %")
+
+
+def test_v3(classes: List[str], net_path: str, batch_size: int, network: BaseNet):
+    image_dataset = ImageDataset("data/test", classes, transform=TransformToRGB())
+    data_loader = DataLoader(image_dataset, batch_size=batch_size, shuffle=False, num_workers=10)
+
+    dataiter = iter(data_loader)
+    images, labels = next(dataiter)
+
+    # print images
+    # imshow(torchvision.utils.make_grid(images))
+    print("GroundTruth: ", " ".join(f"{classes[labels[j]]:5s}" for j in range(4)))
+
+    net = network(num_classes=len(classes))
+    net.load_state_dict(torch.load(net_path))
+    outputs = net(images)
+
+    _, predicted = torch.max(outputs, 1)
+
+    print("Predicted: ", " ".join(f"{classes[predicted[j]]:5s}" for j in range(4)))
+
+    correct = 0
+    total = 0
+    # since we're not training, we don't need to calculate the gradients for our outputs
+    with torch.no_grad():
+        for data in data_loader:
+            images, labels = data
+            # calculate outputs by running images through the network
+            outputs = net(images)
+            # the class with the highest energy is what we choose as prediction
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+
+    print(f"Accuracy of the network on the {total} test images: {100 * correct // total} %")
+
+    # prepare to count predictions for each class
+    correct_pred = {classname: 0 for classname in classes}
+    total_pred = {classname: 0 for classname in classes}
+
+    # again no gradients needed
+    with torch.no_grad():
+        for data in data_loader:
             images, labels = data
             outputs = net(images)
             _, predictions = torch.max(outputs, 1)
@@ -198,9 +311,23 @@ def test(classes: List[str], net_path: str, batch_size: int):
 
 
 if __name__ == "__main__":
-    batch_size = 4
+    batch_size = 20
     classes = ["angry", "fear", "happy", "neutral", "sad", "surprise"]
-    net_path = "data/face_image_net.pth"
 
-    train(classes, net_path, batch_size)
-    test(classes, net_path, batch_size)
+    # net_path = "data/face_image_net.pth"
+    # net_path = "data/face_image_net_with_dropout.pth"
+    # net_path = "data/face_image_net_with_dropout_removed_blank_images.pth"
+    # net_path = "data/face_image_net_with_dropout_removed_blank_images_kl_div_loss.pth"
+    # net_path = "data/face_image_net_with_dropout_removed_blank_images_pretrained_resnet_focal_loss.pth"
+    # net_path = "data/face_image_net_with_dropout_removed_blank_images_4_conv_layer.pth"
+    # net_path = "data/face_image_net_with_dropout_removed_blank_images_4_conv_layer_adam.pth"
+
+    net_path = "data/face_image_net_with_dropout_removed_blank_images_resnet152_.pth"
+
+    # train_adam(classes, net_path, batch_size, NetL4WithDropout)
+    # train_v2(classes, net_path, batch_size, NetWithDropout)
+    # train_v3(classes, net_path, batch_size, NetResnet18)
+    train_v4(classes, net_path, batch_size, NetResnetresnet152)
+    # test(classes, net_path, batch_size, NetL4WithDropout)
+    # test_v3(classes, net_path, batch_size, NetResnet18)
+    test_v3(classes, net_path, batch_size, NetResnetresnet152)

@@ -25,7 +25,6 @@ class Transform(TransformBase):
         transform = transforms.Compose(
             [
                 transforms.ToTensor(),
-                # transforms.Resize(size=(64, 64), antialias=True),
                 transforms.Normalize((0.5,), (0.5,)),
             ]
         )
@@ -62,7 +61,8 @@ class ImageDataset(Dataset):
         return len(self.images_paths)
 
     def __getitem__(self, idx: int) -> Tuple[Image.Image, int]:
-        sample = (Image.open(self.images_paths[idx][0]), self.images_paths[idx][1])
+        sample = (Image.open(self.images_paths[idx][0]),
+                  self.images_paths[idx][1])
 
         if self.transform:
             sample = self.transform(sample)

@@ -8,7 +8,6 @@ import torchvision.transforms as transforms
 from typing import List, Tuple
 import zipfile
 from abc import ABC, abstractmethod
-import torchvision.transforms.functional as F
 
 
 class TransformBase(ABC):

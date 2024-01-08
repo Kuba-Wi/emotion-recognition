@@ -1,355 +1,58 @@
 from torch.utils.data import DataLoader
-import torch.nn as nn
-import torch.optim as optim
-from typing import List
-from load_dataset import ImageDataset, Transform, TransformToRGB
 import torch
+import torch.optim as optim
+from typing import Iterable
+from load_dataset import ImageDataset, Transform, TransformToRGB
 from net import *
 import matplotlib.pyplot as plt
 from datetime import datetime
+from config import Config
+from pathlib import Path
+from matplotlib.ticker import FuncFormatter
 
 
-def train(classes: List[str], net_path: str, batch_size: int, network):
-    image_dataset = ImageDataset("data/train", classes, transform=Transform())
-    data_loader = DataLoader(image_dataset, batch_size=batch_size, shuffle=True, num_workers=7)
-
-    # get some random training images
-    dataiter = iter(data_loader)
-    images, labels = next(dataiter)
-
-    # show images
-    # imshow(torchvision.utils.make_grid(images))
-    # print labels
-    print(" ".join(f"{classes[labels[j]]:5s}" for j in range(batch_size)))
-
-    net = network()
-
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
-
-    for epoch in range(10):  # loop over the dataset multiple times
-        running_loss = 0.0
-        for i, data in enumerate(data_loader, 0):
-            # get the inputs; data is a list of [inputs, labels]
-            inputs, labels = data
-
-            # flatten labels
-            labels = torch.flatten(labels)
-
-            # zero the parameter gradients
-            optimizer.zero_grad()
-
-            # forward + backward + optimize
-            outputs = net(inputs)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-
-            # print statistics
-            running_loss += loss.item()
-            if i % 100 == 99:  # print every 100 mini-batches
-                print(f"[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.3f}")
-                running_loss = 0.0
-
-    print("Finished Training")
-
-    torch.save(net.state_dict(), net_path)
-
-
-def train_adam(classes: List[str], net_path: str, batch_size: int, network):
-    image_dataset = ImageDataset("data/train", classes, transform=Transform())
-    data_loader = DataLoader(image_dataset, batch_size=batch_size, shuffle=True, num_workers=7)
-
-    # get some random training images
-    dataiter = iter(data_loader)
-    images, labels = next(dataiter)
-
-    # show images
-    # imshow(torchvision.utils.make_grid(images))
-    # print labels
-    print(" ".join(f"{classes[labels[j]]:5s}" for j in range(batch_size)))
-
-    net = network()
-
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(net.parameters(), lr=0.001)
-
-    for epoch in range(10):  # loop over the dataset multiple times
-        running_loss = 0.0
-        for i, data in enumerate(data_loader, 0):
-            # get the inputs; data is a list of [inputs, labels]
-            inputs, labels = data
-
-            # flatten labels
-            labels = torch.flatten(labels)
-
-            # zero the parameter gradients
-            optimizer.zero_grad()
-
-            # forward + backward + optimize
-            outputs = net(inputs)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-
-            # print statistics
-            running_loss += loss.item()
-            if i % 100 == 99:  # print every 100 mini-batches
-                print(f"[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.3f}")
-                running_loss = 0.0
-
-    print("Finished Training")
-
-    torch.save(net.state_dict(), net_path)
-
-
-def train_v2(classes: List[str], net_path: str, batch_size: int, network):
-    image_dataset = ImageDataset("data/train", classes, transform=Transform())
-    data_loader = DataLoader(image_dataset, batch_size=batch_size, shuffle=True, num_workers=7)
-
-    # get some random training images
-    dataiter = iter(data_loader)
-    images, labels = next(dataiter)
-
-    # show images
-    # imshow(torchvision.utils.make_grid(images))
-    # print labels
-    print(" ".join(f"{classes[labels[j]]:5s}" for j in range(batch_size)))
-
-    net = network()
-
-    criterion = nn.KLDivLoss()
-
-    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
-
-    for epoch in range(10):
-        running_loss = 0.0
-        for i, data in enumerate(data_loader, 0):
-            inputs, labels = data
-            optimizer.zero_grad()
-            outputs = F.log_softmax(net(inputs), dim=1)  # Apply log_softmax to model outputs
-            labels_onehot = F.one_hot(labels, num_classes=len(classes)).float()  # Convert labels to one-hot encoding
-            loss = criterion(outputs, labels_onehot)
-            loss.backward()
-            optimizer.step()
-
-            running_loss += loss.item()
-            if i % 100 == 99:
-                print(f"[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.3f}")
-                running_loss = 0.0
-
-    print("Finished Training")
-    torch.save(net.state_dict(), net_path)
-
-
-def train_v3(classes: List[str], net_path: str, batch_size: int, network):
-    image_dataset = ImageDataset("data/train", classes, transform=TransformToRGB())
-    data_loader = DataLoader(image_dataset, batch_size=batch_size, shuffle=True, num_workers=7)
-
-    net = network(num_classes=len(classes))
-
-    # Use Focal Loss
-    criterion = FocalLoss(gamma=2)
-
-    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
-
-    for epoch in range(10):
-        running_loss = 0.0
-        for i, data in enumerate(data_loader, 0):
-            inputs, labels = data
-            optimizer.zero_grad()
-            outputs = net(inputs)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-
-            running_loss += loss.item()
-            if i % 100 == 99:
-                print(f"[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.3f}")
-                running_loss = 0.0
-
-    print("Finished Training")
-    torch.save(net.state_dict(), net_path)
-
-
-def train_v4(classes: List[str], net_path: str, batch_size: int, network):
-    image_dataset = ImageDataset("data/train", classes, transform=TransformToRGB())
-    data_loader = DataLoader(image_dataset, batch_size=batch_size, shuffle=True, num_workers=10)
-
-    net = network(num_classes=len(classes))
-
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
-
-    for epoch in range(10):
-        running_loss = 0.0
-        for i, data in enumerate(data_loader, 0):
-            inputs, labels = data
-            optimizer.zero_grad()
-            outputs = net(inputs)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-
-            running_loss += loss.item()
-            if i % 100 == 99:
-                print(f"[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.3f}")
-                running_loss = 0.0
-
-    print("Finished Training")
-    torch.save(net.state_dict(), net_path)
-
-
-def test(classes: List[str], net_path: str, batch_size: int, network):
-    image_dataset = ImageDataset("data/test", classes, transform=Transform())
-    data_loader = DataLoader(image_dataset, batch_size=batch_size, shuffle=False, num_workers=7)
-
-    dataiter = iter(data_loader)
-    images, labels = next(dataiter)
-
-    # print images
-    # imshow(torchvision.utils.make_grid(images))
-    print("GroundTruth: ", " ".join(f"{classes[labels[j]]:5s}" for j in range(4)))
-
-    net = network()
-    net.load_state_dict(torch.load(net_path))
-    outputs = net(images)
-
-    _, predicted = torch.max(outputs, 1)
-
-    print("Predicted: ", " ".join(f"{classes[predicted[j]]:5s}" for j in range(4)))
-
-    correct = 0
-    total = 0
-    # since we're not training, we don't need to calculate the gradients for our outputs
-    with torch.no_grad():
-        for data in data_loader:
-            images, labels = data
-            # calculate outputs by running images through the network
-            outputs = net(images)
-            # the class with the highest energy is what we choose as prediction
-            _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
-
-    print(f"Accuracy of the network on the {total} test images: {100 * correct // total} %")
-
-    # prepare to count predictions for each class
-    correct_pred = {classname: 0 for classname in classes}
-    total_pred = {classname: 0 for classname in classes}
-
-    # again no gradients needed
-    with torch.no_grad():
-        for data in data_loader:
-            images, labels = data
-            outputs = net(images)
-            _, predictions = torch.max(outputs, 1)
-            # collect the correct predictions for each class
-            for label, prediction in zip(labels, predictions):
-                if label == prediction:
-                    correct_pred[classes[label]] += 1
-                total_pred[classes[label]] += 1
-
-    # print accuracy for each class
-    for classname, correct_count in correct_pred.items():
-        accuracy = 100 * float(correct_count) / total_pred[classname]
-        print(f"Accuracy for class: {classname:5s} is {accuracy:.1f} %")
-
-
-def test_v3(classes: List[str], net_path: str, batch_size: int, network: BaseNet):
-    image_dataset = ImageDataset("data/test", classes, transform=TransformToRGB())
-    data_loader = DataLoader(image_dataset, batch_size=batch_size, shuffle=False, num_workers=10)
-
-    dataiter = iter(data_loader)
-    images, labels = next(dataiter)
-
-    # print images
-    # imshow(torchvision.utils.make_grid(images))
-    print("GroundTruth: ", " ".join(f"{classes[labels[j]]:5s}" for j in range(4)))
-
-    net = network(num_classes=len(classes))
-    net.load_state_dict(torch.load(net_path))
-    outputs = net(images)
-
-    _, predicted = torch.max(outputs, 1)
-
-    print("Predicted: ", " ".join(f"{classes[predicted[j]]:5s}" for j in range(4)))
-
-    correct = 0
-    total = 0
-    # since we're not training, we don't need to calculate the gradients for our outputs
-    with torch.no_grad():
-        for data in data_loader:
-            images, labels = data
-            # calculate outputs by running images through the network
-            outputs = net(images)
-            # the class with the highest energy is what we choose as prediction
-            _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
-
-    print(f"Accuracy of the network on the {total} test images: {100 * correct // total} %")
-
-    # prepare to count predictions for each class
-    correct_pred = {classname: 0 for classname in classes}
-    total_pred = {classname: 0 for classname in classes}
-
-    # again no gradients needed
-    with torch.no_grad():
-        for data in data_loader:
-            images, labels = data
-            outputs = net(images)
-            _, predictions = torch.max(outputs, 1)
-            # collect the correct predictions for each class
-            for label, prediction in zip(labels, predictions):
-                if label == prediction:
-                    correct_pred[classes[label]] += 1
-                total_pred[classes[label]] += 1
-
-    # print accuracy for each class
-    for classname, correct_count in correct_pred.items():
-        accuracy = 100 * float(correct_count) / total_pred[classname]
-        print(f"Accuracy for class: {classname:5s} is {accuracy:.1f} %")
-
-
-def train_with_additional_data(classes, net_path: str, batch_size: int, model: BaseNet, num_epochs: int, start_from = None):
-    image_dataset = ImageDataset("data/train", classes, transform=Transform())
-    data_loader = DataLoader(image_dataset, batch_size=batch_size, shuffle=True, num_workers=7)
+def train_from_config(config: Config, start_from: int = 0):
+    image_dataset = ImageDataset("data/train", config.classes, transform=config.transform())
+    data_loader = DataLoader(image_dataset, batch_size=config.batch_size, shuffle=True, num_workers=7)
 
     total_step = len(data_loader)
-    class_correct = list(0. for _ in range(7))
-    class_total = list(0. for _ in range(7))
+    Path(config.net_dir).mkdir(parents=True, exist_ok=True)
 
-    net = model()
-    if start_from is not None:
-        net.load_state_dict(torch.load(net_path + f"model_epoch_{start_from}.pth"))
+    if start_from:
+        config.net_model.load_state_dict(torch.load(config.net_dir + f"model_epoch_{start_from}.pth"))
 
-    net.train()
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(net.parameters(), lr=0.0001)
+    config.net_model.train()
+    criterion = config.criterion
+    optimizer = config.optimizer(config.net_model.parameters())
 
-    with open(net_path + "log.log", "w") as log_file:
+    with open(config.net_dir + "training.log", "a") as log_file:
         log_file.write(f"Start at {datetime.now().strftime('%H:%M:%S')}" + '\n')
         log_file.flush()
 
-        for epoch in range(start_from + 1, num_epochs):
+        for epoch in range(start_from + 1, config.num_epochs + 1):
+            class_correct = list(0. for _ in range(len(config.classes)))
+            class_total = list(0. for _ in range(len(config.classes)))
             running_loss = 0.0
             running_corrects = 0
 
-            with open(net_path + f"model_epoch_{epoch}.log", "w") as model_file:
+            with open(config.net_dir + f"model_epoch_{epoch}.log", "w") as model_file:
                 for i, (images, labels) in enumerate(data_loader):
-                    # print(f"Batch {i}: Images size: {images.size()}, Labels size: {labels.size()}")  # Debug
                     # Forward pass
-                    outputs = net(images)
-                    # print(f"Batch {i}: Output size: {outputs.size()}, Labels size: {labels.size()}")  # Debug
-
-                    loss = criterion(outputs, labels)
+                    if config.custom_criterion_call is None:
+                        outputs = config.net_model(images)
+                        loss = criterion(outputs, labels)
+                    else:
+                        mod_outputs, mod_labels = config.custom_criterion_call(config.net_model(images), labels,
+                                                                               len(config.classes))
+                        outputs = mod_outputs
+                        loss = criterion(outputs, mod_labels)
 
                     # Backward and optimize
                     optimizer.zero_grad()
                     loss.backward()
                     optimizer.step()
 
+                    # Runtime stats and logs
                     running_loss += loss.item()
                     _, predicted = torch.max(outputs, 1)
                     running_corrects += (predicted == labels).sum().item()
@@ -360,22 +63,24 @@ def train_with_additional_data(classes, net_path: str, batch_size: int, model: B
                         class_correct[label] += c[j].item()
                         class_total[label] += 1
 
-                    print(f"[{epoch + 1}, {i + 1:5d}] loss: {loss.item():.3f}")
-                    model_file.write(f"[{epoch + 1}, {i + 1:5d}] loss: {loss.item():.3f}\n")
+                    s = f"[{epoch}, {i + 1:5d}] loss: {loss.item():.3f}"
+                    print(s)
+                    model_file.write(s + '\n')
 
+                # Save model
+                torch.save(config.net_model.state_dict(), config.net_dir + f"model_epoch_{epoch}.pth")
+
+                # End of epoch stats and logs
                 epoch_loss = running_loss / total_step
                 epoch_acc = running_corrects / len(data_loader.dataset)
-
-                s = f'Epoch [{epoch + 1}/{num_epochs}], Loss: {epoch_loss:.4f}, Accuracy: {epoch_acc:.4f}'
+                s = f'Epoch [{epoch}/{config.num_epochs}], Loss: {epoch_loss:.4f}, Accuracy: {epoch_acc:.4f}'
                 print(s)
                 log_file.write(s + '\n')
 
-                torch.save(net.state_dict(), net_path + f"model_epoch_{epoch}.pth")
-
                 # Calculate class-wise accuracy
-                for i in range(7):
+                for i in range(len(config.classes)):
                     if class_total[i]:
-                        s = f'Accuracy of class {classes[i]} : {100 * class_correct[i] / class_total[i]:.2f}%'
+                        s = f'Accuracy of class {config.classes[i]} : {100 * class_correct[i] / class_total[i]:.2f}%'
                         print(s)
                         log_file.write(s + '\n')
                 log_file.flush()
@@ -383,43 +88,39 @@ def train_with_additional_data(classes, net_path: str, batch_size: int, model: B
         print("Training finished")
         log_file.write(f"End at {datetime.now().strftime('%H:%M:%S')}" + '\n')
 
-    return class_correct, class_total
 
+def test_from_config(config: Config, num_epochs: Iterable[int]):
+    image_dataset = ImageDataset("data/test", config.classes, transform=config.transform())
+    data_loader = DataLoader(image_dataset, batch_size=config.batch_size, shuffle=True, num_workers=7)
 
-def test_with_additional_data(classes, net_path: str, batch_size: int, model: BaseNet, num_epochs: List[int]):
-    image_dataset = ImageDataset("data/test", classes, transform=Transform())
-    data_loader = DataLoader(image_dataset, batch_size=batch_size, shuffle=True, num_workers=7)
-
-    with open(net_path + f"test_log_{min(num_epochs)}_{max(num_epochs)}.log", "w") as log_file:
+    with open(config.net_dir + f"testing.log", "a") as log_file:
         log_file.write(f"Start at {datetime.now().strftime('%H:%M:%S')}" + '\n')
         log_file.flush()
 
         for epoch in num_epochs:
-            class_correct = list(0. for _ in range(len(classes)))
-            class_total = list(0. for _ in range(len(classes)))
+            class_correct = list(0. for _ in range(len(config.classes)))
+            class_total = list(0. for _ in range(len(config.classes)))
 
-            net = model()
-            net.load_state_dict(torch.load(net_path + f"model_epoch_{epoch + 1}.pth"))
+            config.net_model.load_state_dict(torch.load(config.net_dir + f"model_epoch_{epoch}.pth"))
 
             for i, (images, labels) in enumerate(data_loader):
-                outputs = net(images)
+                outputs = config.net_model(images)
 
                 _, predicted = torch.max(outputs, 1)
-
                 for label, prediction in zip(labels, predicted):
                     if label == prediction:
                         class_correct[label.item()] += 1
                     class_total[label.item()] += 1
 
             epoch_acc = sum(class_correct) / sum(class_total)
-            s = f'Epoch [{epoch + 1}], Accuracy: {epoch_acc:.4f}'
+            s = f'Epoch [{epoch}], Accuracy: {epoch_acc:.4f}'
             print(s)
             log_file.write(s + '\n')
 
             # Calculate class-wise accuracy
-            for i in range(len(classes)):
+            for i in range(len(config.classes)):
                 if class_total[i]:
-                    s = f'Accuracy of class {classes[i]} : {100 * class_correct[i] / class_total[i]:.2f}%'
+                    s = f'Accuracy of class {config.classes[i]} : {100 * class_correct[i] / class_total[i]:.2f}%'
                     print(s)
                     log_file.write(s + '\n')
             log_file.flush()
@@ -428,54 +129,147 @@ def test_with_additional_data(classes, net_path: str, batch_size: int, model: Ba
         log_file.write(f"End at {datetime.now().strftime('%H:%M:%S')}" + '\n')
 
 
-def run_with_plot():
-    classes = ["angry", "disgust", "fear", "happy", "neutral", "sad", "surprise"]
-    net_path = "data/face_image_net_last/"
-    batch_size = 64
-    net_model = EmotionRecognitionModel
-    num_epochs = 100
+def plot_accuracy_log(config: Config, additional_text: str):
+    epochs = []
+    accuracy_train = []
+    accuracy_test = []
 
-    test_with_additional_data(classes, net_path, batch_size, net_model, list(range(36)))
+    try:
+        with open(config.net_dir + f"training.log", 'r') as file:
+            for line in file:
+                if 'Epoch' in line:
+                    parts = line.strip().split(',')
+                    epoch_part = parts[0].split('[')[1].split('/')[0].strip()
+                    accuracy_part = parts[2].split(':')[1].strip()
+                    epochs.append(int(epoch_part))
+                    accuracy_train.append(float(accuracy_part) * 100)
 
-    # class_correct, class_total = train_with_additional_data(classes, net_path, batch_size, net_model, num_epochs)
-    #
-    # # Calculate class-wise and overall accuracy
-    # class_accuracies = [100 * class_correct[i] / class_total[i] for i in range(7)]
-    # overall_accuracy = 100 * sum(class_correct) / sum(class_total)
-    #
-    # # Plotting
-    # plt.figure(figsize=(10, 6))
-    # plt.bar(len(classes), class_accuracies, color='blue')
-    # plt.axhline(y=overall_accuracy, color='r', linestyle='-')
-    # plt.xlabel('Class')
-    # plt.ylabel('Accuracy (%)')
-    # plt.title('Class-wise and Overall Accuracy')
-    # plt.show()
+        with open(config.net_dir + f"testing.log", 'r') as file:
+            for line in file:
+                if 'Epoch' in line:
+                    parts = line.strip().split(',')
+                    accuracy_part = parts[1].split(':')[1].strip()
+                    accuracy_test.append(float(accuracy_part) * 100)
+    except Exception as e:
+        print(f"Wystąpił błąd podczas wczytywania pliku: {e}")
+
+    # Tworzenie wykresu
+    plt.figure(figsize=(10, 6))
+
+    plt.plot(epochs, accuracy_train, label='Zbiór treningowy', color='blue')
+    plt.plot(epochs, accuracy_test, label='Zbiór testowy', color='red')
+
+    plt.xlabel('Epoki', fontsize=14)
+    plt.xlim(min(epochs), max(epochs) + 1)
+    plt.xticks(range(min(epochs), max(epochs) + 1))
+
+    plt.ylabel('Dokładność', fontsize=14)
+    plt.ylim(0, 105)
+    plt.gca().yaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{x:.0f}%"))
+    plt.yticks(range(0, 101, 10))
+
+    plt.grid(True)
+
+    max_point_train = (epochs[accuracy_train.index(max(accuracy_train))], round(max(accuracy_train), 2))
+    max_point_test = (epochs[accuracy_test.index(max(accuracy_test))], round(max(accuracy_test), 2))
+
+    plt.scatter(max_point_train[0], max_point_train[1], color='blue',
+                label=f'Max ({max_point_train[0]}, {max_point_train[1]}%)')
+    plt.scatter(max_point_test[0], max_point_test[1], color='red',
+                label=f'Max ({max_point_test[0]}, {max_point_test[1]}%)')
+
+    plt.title('Dokładność modelu w kolejnych epokach dla ' + additional_text, fontsize=16)
+    plt.legend()
+    plt.show()
 
 
 if __name__ == "__main__":
-    run_with_plot()
-    # batch_size = 64
-    # # classes = ["angry", "fear", "happy", "neutral", "sad", "surprise"]
-    # classes = ["angry", "disgust", "fear", "happy", "neutral", "sad", "surprise"]
-    #
-    # # net_path = "data/face_image_net.pth"
-    # # net_path = "data/face_image_net_with_dropout.pth"
-    # # net_path = "data/face_image_net_with_dropout_removed_blank_images.pth"
-    # # net_path = "data/face_image_net_with_dropout_removed_blank_images_kl_div_loss.pth"
-    # # net_path = "data/face_image_net_with_dropout_removed_blank_images_pretrained_resnet_focal_loss.pth"
-    # # net_path = "data/face_image_net_with_dropout_removed_blank_images_4_conv_layer.pth"
-    # # net_path = "data/face_image_net_with_dropout_removed_blank_images_4_conv_layer_adam.pth"
-    #
-    # net_path = "data/face_image_net_with_dropout_removed_blank_images_resnet152_.pth"
-    #
-    # # train_adam(classes, net_path, batch_size, NetL4WithDropout)
-    # # train_v2(classes, net_path, batch_size, NetWithDropout)
-    # # train_v3(classes, net_path, batch_size, NetResnet18)
-    # train_v4(classes, net_path, batch_size, NetResnetresnet152)
-    # # test(classes, net_path, batch_size, NetL4WithDropout)
-    # # test_v3(classes, net_path, batch_size, NetResnet18)
-    # test_v3(classes, net_path, batch_size, NetResnetresnet152)
+    config1 = Config(classes=["angry", "fear", "happy", "neutral", "sad", "surprise"],
+                     net_model=BasicNet(6),
+                     net_dir='data/basic_net_6_classes_batch_4/',
+                     batch_size=4,
+                     num_epochs=20,
+                     optimizer=lambda model_params: optim.SGD(model_params, lr=0.001, momentum=0.9),
+                     criterion=nn.CrossEntropyLoss(),
+                     transform=Transform)
 
+    config2 = Config(classes=["angry", "disgust", "fear", "happy", "neutral", "sad", "surprise"],
+                     net_model=BasicNet(7),
+                     net_dir='data/basic_net_7_classes_batch_64/',
+                     batch_size=64,
+                     num_epochs=20,
+                     optimizer=lambda model_params: optim.SGD(model_params, lr=0.001, momentum=0.9),
+                     criterion=nn.CrossEntropyLoss(),
+                     transform=Transform)
 
+    config3 = Config(classes=["angry", "disgust", "fear", "happy", "neutral", "sad", "surprise"],
+                     net_model=BasicNet(7),
+                     net_dir='data/basic_net_7_classes_batch_4/',
+                     batch_size=4,
+                     num_epochs=20,
+                     optimizer=lambda model_params: optim.SGD(model_params, lr=0.001, momentum=0.9),
+                     criterion=nn.CrossEntropyLoss(),
+                     transform=Transform)
 
+    config4 = Config(classes=["angry", "disgust", "fear", "happy", "neutral", "sad", "surprise"],
+                     net_model=BasicNet(7),
+                     net_dir='data/basic_net_7_classes_batch_4_adam/',
+                     batch_size=4,
+                     num_epochs=20,
+                     optimizer=lambda model_params: optim.Adam(model_params, lr=0.0001),
+                     criterion=nn.CrossEntropyLoss(),
+                     transform=Transform)
+
+    config5 = Config(classes=["angry", "disgust", "fear", "happy", "neutral", "sad", "surprise"],
+                     net_model=BasicNet(7),
+                     net_dir='data/basic_net_7_classes_batch_4_kldivloss/',
+                     batch_size=4,
+                     num_epochs=20,
+                     optimizer=lambda model_params: optim.SGD(model_params, lr=0.001, momentum=0.9),
+                     criterion=nn.KLDivLoss(),
+                     transform=Transform,
+                     custom_criterion_call=lambda net_outputs, labels, classes_len:
+                     (F.log_softmax(net_outputs, dim=1), F.one_hot(labels, num_classes=classes_len).float()))
+
+    config6 = Config(classes=["angry", "disgust", "fear", "happy", "neutral", "sad", "surprise"],
+                     net_model=BasicNetWithDropout(7),
+                     net_dir='data/basic_net_with_dropout/',
+                     batch_size=4,
+                     num_epochs=20,
+                     optimizer=lambda model_params: optim.SGD(model_params, lr=0.001, momentum=0.9),
+                     criterion=nn.CrossEntropyLoss(),
+                     transform=Transform)
+
+    config7 = Config(classes=["angry", "disgust", "fear", "happy", "neutral", "sad", "surprise"],
+                     net_model=NetResnet152(7),
+                     net_dir='data/resnet_152/',
+                     batch_size=64,
+                     num_epochs=20,
+                     optimizer=lambda model_params: optim.Adam(model_params, lr=0.0001),
+                     criterion=nn.CrossEntropyLoss(),
+                     transform=TransformToRGB)
+
+    config8 = Config(classes=["angry", "disgust", "fear", "happy", "neutral", "sad", "surprise"],
+                     net_model=EmotionRecognitionModel(),
+                     net_dir='data/advanced_net/',
+                     batch_size=64,
+                     num_epochs=20,
+                     optimizer=lambda model_params: optim.Adam(model_params, lr=0.0001),
+                     criterion=nn.CrossEntropyLoss(),
+                     transform=Transform)
+
+    # plot_accuracy_log(config4, 'podstawowej sieci neuronowej z trzema warstwami konwolucyjnymi')
+
+    # # train_from_config(config5, start_from=0)
+    # # test_from_config(config5, range(1, 21))
+    # plot_accuracy_log(config5, 'podstawowej sieci neuronowej z trzema warstwami konwolucyjnymi')
+    #
+    # # train_from_config(config6, start_from=0)
+    # # test_from_config(config6, range(1, 21))
+    # plot_accuracy_log(config6, 'podstawowej sieci neuronowej z trzema warstwami konwolucyjnymi\ni dodatkową warstwą odrzucającą')
+    #
+    # # train_from_config(config7, start_from=0)
+    # # test_from_config(config7, range(1, 21))
+    # plot_accuracy_log(config7, 'sieci ResNet-152')
+
+    plot_accuracy_log(config8, 'ulepszonej sieci neuronowej z pięcioma warstwami konwolucyjnymi')

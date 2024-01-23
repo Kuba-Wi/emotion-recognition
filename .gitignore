@@ -10,5 +10,5 @@ _version.py
 # Other
 data/train
 data/test
-*epoch*
+data/*/*epoch*
 original/

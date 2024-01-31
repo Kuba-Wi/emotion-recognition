@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(
-    name="face_recognition",
+    name="emotion_recognition",
     author="Jakub Wińczuk, Kamil Uchnast",
     description="Głębokie sieci neuronowe - projekt",
     package_dir={"": "src"},

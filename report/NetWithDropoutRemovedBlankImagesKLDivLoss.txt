@@ -1,9 +1,0 @@
-GroundTruth:  angry angry angry angry
-Predicted:  happy sad   sad   happy
-Accuracy of the network on the 7067 test images: 49 %
-Accuracy for class: angry is 34.6 %
-Accuracy for class: fear  is 21.4 %
-Accuracy for class: happy is 78.5 %
-Accuracy for class: neutral is 51.3 %
-Accuracy for class: sad   is 27.0 %
-Accuracy for class: surprise is 67.6 %

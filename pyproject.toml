@@ -1,0 +1,17 @@
+[build-system]
+requires = [
+    "setuptools",
+    "setuptools_scm",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "_version.py"
+
+[tool.mypy]
+mypy_path = "src"
+ignore_missing_imports = true
+
+
+[tool.black]
+line-length = 120

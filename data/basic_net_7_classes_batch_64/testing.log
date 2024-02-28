@@ -1,0 +1,162 @@
+Start at 23:18:29
+Epoch [1], Accuracy: 0.2470
+Accuracy of class angry : 0.00%
+Accuracy of class disgust : 0.00%
+Accuracy of class fear : 0.00%
+Accuracy of class happy : 99.94%
+Accuracy of class neutral : 0.00%
+Accuracy of class sad : 0.00%
+Accuracy of class surprise : 0.00%
+Epoch [2], Accuracy: 0.3058
+Accuracy of class angry : 17.85%
+Accuracy of class disgust : 0.00%
+Accuracy of class fear : 2.34%
+Accuracy of class happy : 75.25%
+Accuracy of class neutral : 24.01%
+Accuracy of class sad : 10.59%
+Accuracy of class surprise : 28.52%
+Epoch [3], Accuracy: 0.3267
+Accuracy of class angry : 23.80%
+Accuracy of class disgust : 0.00%
+Accuracy of class fear : 1.76%
+Accuracy of class happy : 79.20%
+Accuracy of class neutral : 23.60%
+Accuracy of class sad : 2.49%
+Accuracy of class surprise : 44.77%
+Epoch [4], Accuracy: 0.3509
+Accuracy of class angry : 28.18%
+Accuracy of class disgust : 0.00%
+Accuracy of class fear : 5.96%
+Accuracy of class happy : 75.03%
+Accuracy of class neutral : 19.79%
+Accuracy of class sad : 17.64%
+Accuracy of class surprise : 47.29%
+Epoch [5], Accuracy: 0.3745
+Accuracy of class angry : 8.46%
+Accuracy of class disgust : 0.00%
+Accuracy of class fear : 8.20%
+Accuracy of class happy : 56.54%
+Accuracy of class neutral : 39.50%
+Accuracy of class sad : 47.07%
+Accuracy of class surprise : 53.67%
+Epoch [6], Accuracy: 0.4005
+Accuracy of class angry : 11.59%
+Accuracy of class disgust : 0.00%
+Accuracy of class fear : 10.55%
+Accuracy of class happy : 76.83%
+Accuracy of class neutral : 43.88%
+Accuracy of class sad : 26.06%
+Accuracy of class surprise : 51.38%
+Epoch [7], Accuracy: 0.4078
+Accuracy of class angry : 2.92%
+Accuracy of class disgust : 0.00%
+Accuracy of class fear : 17.77%
+Accuracy of class happy : 77.73%
+Accuracy of class neutral : 45.90%
+Accuracy of class sad : 28.79%
+Accuracy of class surprise : 49.70%
+Epoch [8], Accuracy: 0.4147
+Accuracy of class angry : 7.20%
+Accuracy of class disgust : 0.00%
+Accuracy of class fear : 12.30%
+Accuracy of class happy : 67.47%
+Accuracy of class neutral : 43.55%
+Accuracy of class sad : 46.59%
+Accuracy of class surprise : 56.20%
+Epoch [9], Accuracy: 0.4198
+Accuracy of class angry : 11.17%
+Accuracy of class disgust : 0.00%
+Accuracy of class fear : 8.79%
+Accuracy of class happy : 67.98%
+Accuracy of class neutral : 58.15%
+Accuracy of class sad : 27.02%
+Accuracy of class surprise : 66.91%
+Epoch [10], Accuracy: 0.4262
+Accuracy of class angry : 19.52%
+Accuracy of class disgust : 0.00%
+Accuracy of class fear : 30.47%
+Accuracy of class happy : 67.70%
+Accuracy of class neutral : 38.36%
+Accuracy of class sad : 29.03%
+Accuracy of class surprise : 63.06%
+Epoch [11], Accuracy: 0.4405
+Accuracy of class angry : 11.59%
+Accuracy of class disgust : 0.00%
+Accuracy of class fear : 19.43%
+Accuracy of class happy : 80.50%
+Accuracy of class neutral : 56.20%
+Accuracy of class sad : 22.53%
+Accuracy of class surprise : 54.15%
+Epoch [12], Accuracy: 0.4404
+Accuracy of class angry : 22.65%
+Accuracy of class disgust : 0.00%
+Accuracy of class fear : 19.73%
+Accuracy of class happy : 75.59%
+Accuracy of class neutral : 20.28%
+Accuracy of class sad : 44.67%
+Accuracy of class surprise : 71.48%
+Epoch [13], Accuracy: 0.4479
+Accuracy of class angry : 24.53%
+Accuracy of class disgust : 0.00%
+Accuracy of class fear : 24.02%
+Accuracy of class happy : 62.51%
+Accuracy of class neutral : 53.12%
+Accuracy of class sad : 45.39%
+Accuracy of class surprise : 48.62%
+Epoch [14], Accuracy: 0.4674
+Accuracy of class angry : 34.34%
+Accuracy of class disgust : 0.00%
+Accuracy of class fear : 20.80%
+Accuracy of class happy : 78.47%
+Accuracy of class neutral : 46.72%
+Accuracy of class sad : 23.34%
+Accuracy of class surprise : 66.67%
+Epoch [15], Accuracy: 0.4692
+Accuracy of class angry : 29.12%
+Accuracy of class disgust : 0.00%
+Accuracy of class fear : 14.26%
+Accuracy of class happy : 78.35%
+Accuracy of class neutral : 58.96%
+Accuracy of class sad : 28.15%
+Accuracy of class surprise : 57.16%
+Epoch [16], Accuracy: 0.4703
+Accuracy of class angry : 36.01%
+Accuracy of class disgust : 0.00%
+Accuracy of class fear : 18.75%
+Accuracy of class happy : 64.49%
+Accuracy of class neutral : 50.85%
+Accuracy of class sad : 49.16%
+Accuracy of class surprise : 54.75%
+Epoch [17], Accuracy: 0.4765
+Accuracy of class angry : 27.66%
+Accuracy of class disgust : 0.00%
+Accuracy of class fear : 13.67%
+Accuracy of class happy : 83.93%
+Accuracy of class neutral : 42.25%
+Accuracy of class sad : 41.38%
+Accuracy of class surprise : 58.84%
+Epoch [18], Accuracy: 0.4826
+Accuracy of class angry : 30.38%
+Accuracy of class disgust : 0.90%
+Accuracy of class fear : 23.34%
+Accuracy of class happy : 68.09%
+Accuracy of class neutral : 63.10%
+Accuracy of class sad : 36.81%
+Accuracy of class surprise : 58.72%
+Epoch [19], Accuracy: 0.4911
+Accuracy of class angry : 44.47%
+Accuracy of class disgust : 1.80%
+Accuracy of class fear : 29.10%
+Accuracy of class happy : 68.09%
+Accuracy of class neutral : 48.42%
+Accuracy of class sad : 41.62%
+Accuracy of class surprise : 57.16%
+Epoch [20], Accuracy: 0.4990
+Accuracy of class angry : 28.91%
+Accuracy of class disgust : 1.80%
+Accuracy of class fear : 43.36%
+Accuracy of class happy : 77.17%
+Accuracy of class neutral : 50.20%
+Accuracy of class sad : 32.08%
+Accuracy of class surprise : 56.68%
+End at 23:27:48

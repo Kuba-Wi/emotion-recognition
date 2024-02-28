@@ -1,0 +1,6 @@
+tox~=3.25
+packaging~=21.3
+setuptools~=63.2
+setuptools-scm~=7.0
+twine~=4.0
+-e .
